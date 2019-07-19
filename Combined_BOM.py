@@ -61,9 +61,9 @@ def debugbreak():
 		
 def clean_value(textin):
 	temptext = textin
-	temptext = temptext.lstrip('text:u\'')     #Remove the initial part of the string that we don't need 'text:u'   
-	temptext = temptext.replace(" ","")			#This will remove any and all white spaces
-	temptext = temptext.replace("'","")			#This will remove any and all white spaces
+	temptext = temptext.lstrip('text:u\'')     	# Remove the initial part of the string that we don't need 'text:u'   
+	temptext = temptext.replace("'","")			# Remove single quote marks from value
+	temptext = temptext.strip()					# Remove only leading and trailing white spaces
 	if(temptext.find("number:") != -1):
 		temptext = temptext.replace("number:","")			#This will remove any and all white spaces
 	if(temptext.find("mpty:") != -1):

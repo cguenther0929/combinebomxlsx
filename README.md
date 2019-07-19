@@ -6,3 +6,5 @@ When running this script, the user will be able to create one large flat BOM for
 
 # Revisions
 v1.0 -- Initial (tested) release.  It's worth noting that this version works with unicode, and so special symbols, if encountered, shouldn't cause a crash.  
+
+v1.1 -- No longer are internal white spaces removed from descriptions, notes, etc., but rather only those that are leading or trailing.  This prevents descriptions, notes, etc. from being run together.
