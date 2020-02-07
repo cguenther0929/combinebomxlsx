@@ -21,8 +21,8 @@ import re
 import os
 from openpyxl import Workbook
 from openpyxl import load_workbook
-import xlrd		
-import xlwt
+# import xlrd		
+# import xlwt
 
 ## DEFINE VRIABLES ##
 #####################
@@ -78,7 +78,7 @@ def clean_des(textin):
 		temptext = temptext.replace("mpty:","")			#This will remove any and all white spaces
 	return temptext
 def pause():
-	user_input=raw_input("Press any key to exit...")
+	user_input=input("Press any key to exit...")
 	sys.exit(0)
 	   
 #****************************************************************************** 
@@ -93,7 +93,7 @@ if __name__ == '__main__':
 		dirs
 		files
 
-	print "Files found in directory: " + str(len(files))
+	print ("Files found in directory: ", str(len(files)))
 
 	# Iterate through all files in directory
 	for i in range(len(files)-1):
@@ -101,37 +101,42 @@ if __name__ == '__main__':
 		# Search through and open files that are appended with *.xlsx
 		if(files[i].lower().endswith(".xlsx")):
 			
-			print "Opening file: ", files[i]
-			wb = load_workbook(filename = files[i])     #Open the workbook that we are going to parse though 
-			ws = wb.sheetnames             #Grab the names of the worksheets -- I believe this line is critical.
+			print ("Opening file: ", files[i])
+			wb = load_workbook(filename = files[i])     # Open the workbook that we are going to parse though 
+			ws = wb.sheetnames             				# Grab the names of the worksheets -- I believe this line is critical.
 			
 			num_sheets = len(ws)				#This is the number of sheet
 
-			print "\n\n==============================================="
-			print "==============================================="
-			print "File opened: " + str(files[i])
-			print "The number of worksheets is: " + str(num_sheets)
-			print "+++++++++++++++++++++++++++++++++++++++++++++++"
+			print ("\n\n===============================================")
+			print ("===============================================")
+			print ("File opened: ", str(files[i]))
+			print ("The number of worksheets is: ", str(num_sheets))
+			print ("Worksheet names: ", ws)
+			print ("+++++++++++++++++++++++++++++++++++++++++++++++")
 			
 			# Iterate through all sheets in the opened file
 			for sh in range (num_sheets):
 				sheet_valid = False
-				current_sheet = wb.get_sheet_by_name(name = ws[sh])
-				association = raw_input("Enter a unique association / high-level QPN for this worksheet (i.e. Prog Cbl): ") 
 				
-				num_rows = current_sheet.max_row      #This is how many rows are in the worksheet
-				num_cols = current_sheet.max_column 		#This is how many columns are in the sheet
+				current_sheet = wb[ws[sh]]
+				
+				print("Now operating on worksheet: ", ws[sh])
+				association = input("Enter a unique association / high-level QPN for this worksheet (i.e. Prog Cbl): ") 
+				
+				num_rows = current_sheet.max_row     		
+				num_cols = current_sheet.max_column 		
 
-				for r in range (1,num_rows + 1):			# Find the header locations. Excel starts counting at one
-					search_header = ["QPN","QTY","DES","MFG","MFGPN","CR1","CR1PN","NOTES"]					# Load up headers we need to search for
-					print 'Search header before starting: ', search_header
+				for r in range (1,num_rows + 1):												# Find the header locations. Excel starts counting at one
+					search_header = ["QPN","QTY","DES","MFG","MFGPN","CR1","CR1PN","NOTES"]		# Load up headers we need to search for
+					print ("Search header before starting: ", search_header)
 
 					# Iterate over columns of current row
 					for c in range (1,num_cols + 1):				# Excel starts counting at 1
-						temptext = unicode(current_sheet.cell(row = r, column=c).value)                  #This is the fifth cell of the current row
-						temptext = temptext.lstrip('text:u\'')     #Remove the initial part of the string that we don't need 'text:u'   
-						temptext = temptext.rstrip('\'')     		#Remove the initial part of the string that we don't need 'text:u'   
-						temptext = temptext.replace(" ","")			#This will remove any and all white spaces
+						
+						temptext = str(str(current_sheet.cell(row = r, column=c).value).encode(encoding = 'UTF-8',errors = 'strict'))                
+						temptext = temptext.lstrip('text:u\'')     	# Clean up the extra garbage on text 
+						temptext = temptext.rstrip('\'')     		
+						temptext = temptext.replace(" ","")			# Remove any and all white spaces 
 
 						
 						if((temptext.find("QPN")!=-1) or (temptext.find("qpn")!=-1)):
@@ -169,9 +174,9 @@ if __name__ == '__main__':
 					if( (len(search_header) == 0) ):		# Found all header fields
 						sheet_valid = True
 						data_start = r + 1			# Plenty of confidence at this point that we've found data start
-						print 'Data appears to start on row: ', data_start
+						print ("Data appears to start on row: ", data_start)
 						
-						print( 	'Sample data in start row: ', clean_value(unicode(current_sheet.cell(row = data_start, column=QPN_col).value)),' ', 
+						print( 	"Sample data in start row: ", clean_value(unicode(current_sheet.cell(row = data_start, column=QPN_col).value)),' ', 
 								clean_value(unicode(current_sheet.cell(row = data_start, column=DES_col).value)), ' ', 
 								clean_value(unicode(current_sheet.cell(row = data_start, column=MFG_col).value)), ' ', 
 								clean_value(unicode(current_sheet.cell(row = data_start, column=MFGPN_col).value))
@@ -179,23 +184,23 @@ if __name__ == '__main__':
 						break
 					
 					elif( (r == 10) and (len(search_header) > 0) and sh >= num_sheets ):		# Some header fields are missing, so shutdown
-						print "On sheet: " + str(current_sheet) + " -- did not find headers: ", search_header
+						print ("On sheet: ", str(current_sheet), " -- did not find headers: ", search_header)
 						sys.exit(0)
 
 					elif((r == 10) and (len(search_header) > 0) and sh < num_sheets):
 						sheet_valid = False
-						print "* File: ", str(files[i]), "Invalid Sheet: " + str(worksheets[sh]) + " -- did not find headers: ", search_header
+						print ("* File: ", str(files[i]), "Invalid Sheet: ", str(ws[sh]), " -- did not find headers: ", search_header)
 						break
 
 				if(sheet_valid):
-					print "QPN column found to be: " + str(QPN_col)		
-					print "QTY column found to be: " + str(QTY_col)
-					print "Description column found to be: " + str(DES_col)		
-					print "MFG column found to be: " + str(MFG_col)
-					print "MFGPN column found to be: " + str(MFGPN_col)
-					print "CR1 column found to be: " + str(CR1_col)
-					print "CR1PN column found to be: " + str(CR1PN_col)
-					print "NOTES column found to be: " + str(NOTE_col)
+					print ("QPN column found to be: ", 			str(QPN_col))		
+					print ("QTY column found to be: ", 			str(QTY_col))
+					print ("Description column found to be: ", 	str(DES_col))		
+					print ("MFG column found to be: ", 			str(MFG_col))
+					print ("MFGPN column found to be: ", 		str(MFGPN_col))
+					print ("CR1 column found to be: ", 			str(CR1_col))
+					print ("CR1PN column found to be: ", 		str(CR1PN_col))
+					print ("NOTES column found to be: ", 		str(NOTE_col))
 					
 					header = [0,QPN_col,DES_col,MFG_col,MFGPN_col,CR1_col,CR1PN_col,QTY_col,NOTE_col]
 					header_values = ["Association","QPN","DES","MFG","MFGPN","CR1","CR1PN","QTY","NOTES"]
@@ -209,7 +214,7 @@ if __name__ == '__main__':
 						if( (len(clean_value(unicode(current_sheet.cell(row = r, column=QPN_col).value))) <= 1) and ( len(clean_des(unicode(current_sheet.cell(row = r, column=DES_col).value))) <= 1) and
 							( len(clean_value(unicode(current_sheet.cell(row = r, column=MFG_col).value))) <= 1) ):
 							blank_row_count += 1				# Increase value of blank row count
-							print 'Blank row detected at row (', r, ')'
+							print ("Blank row detected at row (", r, ")")
 						else:
 							blank_row_count = 0					
 							asso.append(association)				#For each row in the BOM, we need to append the association
@@ -263,9 +268,9 @@ if __name__ == '__main__':
 							break								# Too many blank rows detected, so break out of the loop.  
 					
 
-	print "\n+++++++++++++++++++++++++++++++++++++++++++++++"
-	print "+++++++++++++++++++++++++++++++++++++++++++++++"
-	print "Creating combined BOM"
+	print ("\n+++++++++++++++++++++++++++++++++++++++++++++++")
+	print ("+++++++++++++++++++++++++++++++++++++++++++++++")
+	print ("Creating combined BOM")
 	
 	NewBook = Workbook()
 	NewSheet = NewBook.active
@@ -286,8 +291,8 @@ if __name__ == '__main__':
 		NewSheet.cell(row=i,column=7).value = cr1pn[i-2]
 		NewSheet.cell(row=i,column=8).value = qty[i-2]
 		NewSheet.cell(row=i,column=9).value = notes[i-2]
-		print ".",
+		print (".", end = ' '),
 
 	NewBook.save(filename = "CombinedBOM.xlsx")
-	print " "
-	null=raw_input("Press any key to close...")
+	print (" ")
+	null=input("Press any key to close...")

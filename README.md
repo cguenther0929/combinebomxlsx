@@ -10,3 +10,5 @@ v1.0 -- Initial (tested) release.  It's worth noting that this version works wit
 v1.1 -- No longer are internal white spaces removed from descriptions, notes, etc., but rather only those that are leading or trailing.  This prevents descriptions, notes, etc. from being run together.
 
 v1.2 -- Bug addressed which is exposed if workbook contains a revision page.  Just like the .XLS parser, this application incorporates the "sheet_valid" flag, and thus won't processes the BOM unless it has been determined that the sheet is valid.  The issue related to opened file types has been corrected.  Now, only .xlsx files are opened and parsed.  
+
+v2.0 -- Ported for Python 3.8+.  Renamed the file.  Tested with BOMs, and appears to function well.  
