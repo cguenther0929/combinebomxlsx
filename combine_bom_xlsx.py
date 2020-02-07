@@ -21,6 +21,7 @@ import re
 import os
 from openpyxl import Workbook
 from openpyxl import load_workbook
+import logging
 # import xlrd		
 # import xlwt
 
@@ -53,15 +54,18 @@ cr1pn 			= []		# Pull in all supplier pn's into a list. This will make them easi
 notes 			= []		# Pull all note values into a list. This will make them easier to work with later
 
 
-## FUNCTIONS ##
-######################	   
+# -------------------------------------- #
+# Local Methods
+# -------------------------------------- #
 def debugbreak():
 	while(1):
 		pass
 		
 def clean_value(textin):
 	temptext = textin
+	logging.info("Text entered into method clean value: " + str(temptext))
 	temptext = temptext.lstrip('text:u\'')     	# Remove the initial part of the string that we don't need 'text:u'   
+	temptext = temptext.lstrip("b\'")     	# Remove the initial part of the string that we don't need 'text:u'   
 	temptext = temptext.replace("'","")			# Remove single quote marks from value
 	temptext = temptext.strip()					# Remove only leading and trailing white spaces
 	if(temptext.find("number:") != -1):
@@ -80,6 +84,16 @@ def clean_des(textin):
 def pause():
 	user_input=input("Press any key to exit...")
 	sys.exit(0)
+
+# -------------------------------------- #
+# Setup Logging
+# -------------------------------------- #
+logging.basicConfig(
+    filename = 'combine_bom.log',
+    level = logging.DEBUG,
+    format =' %(asctime)s -  %(levelname)s - %(message)s',
+	filemode = 'w'
+)
 	   
 #****************************************************************************** 
 #******************************  ---MAIN---  **********************************
@@ -134,9 +148,12 @@ if __name__ == '__main__':
 					for c in range (1,num_cols + 1):				# Excel starts counting at 1
 						
 						temptext = str(str(current_sheet.cell(row = r, column=c).value).encode(encoding = 'UTF-8',errors = 'strict'))                
-						temptext = temptext.lstrip('text:u\'')     	# Clean up the extra garbage on text 
-						temptext = temptext.rstrip('\'')     		
+						temptext = temptext.lstrip("text:u\'")     	# Clean up the extra garbage on text 
+						temptext = temptext.lstrip("b\'")     		
+						temptext = temptext.rstrip("\'")     		
 						temptext = temptext.replace(" ","")			# Remove any and all white spaces 
+						logging.info("Text extracted from cell: " + temptext)
+
 
 						
 						if((temptext.find("QPN")!=-1) or (temptext.find("qpn")!=-1)):
@@ -176,10 +193,10 @@ if __name__ == '__main__':
 						data_start = r + 1			# Plenty of confidence at this point that we've found data start
 						print ("Data appears to start on row: ", data_start)
 						
-						print( 	"Sample data in start row: ", clean_value(unicode(current_sheet.cell(row = data_start, column=QPN_col).value)),' ', 
-								clean_value(unicode(current_sheet.cell(row = data_start, column=DES_col).value)), ' ', 
-								clean_value(unicode(current_sheet.cell(row = data_start, column=MFG_col).value)), ' ', 
-								clean_value(unicode(current_sheet.cell(row = data_start, column=MFGPN_col).value))
+						print( 	"Sample data in start row: ", clean_value(str(str(current_sheet.cell(row = data_start, column=QPN_col).value).encode(encoding = 'UTF-8',errors = 'strict'))),' ', 
+								clean_value(str(str(current_sheet.cell(row = data_start, column=DES_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
+								clean_value(str(str(current_sheet.cell(row = data_start, column=MFG_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
+								clean_value(str(str(current_sheet.cell(row = data_start, column=MFGPN_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
 							)
 						break
 					
@@ -211,55 +228,60 @@ if __name__ == '__main__':
 						
 						
 						# If multiple columns are blank, break out of this loop for these are empty cells
-						if( (len(clean_value(unicode(current_sheet.cell(row = r, column=QPN_col).value))) <= 1) and ( len(clean_des(unicode(current_sheet.cell(row = r, column=DES_col).value))) <= 1) and
-							( len(clean_value(unicode(current_sheet.cell(row = r, column=MFG_col).value))) <= 1) ):
+						if( (len(clean_value(str(str(current_sheet.cell(row = r, column=QPN_col).value).encode(encoding = 'UTF-8',errors = 'strict')))) <= 1) and
+						 	( len(clean_des(str(str(current_sheet.cell(row = r, column=DES_col).value).encode(encoding = 'UTF-8',errors = 'strict')))) <= 1) and
+							( len(clean_des(str(str(current_sheet.cell(row = r, column=MFG_col).value).encode(encoding = 'UTF-8',errors = 'strict')))) <= 1) ):
+							
 							blank_row_count += 1				# Increase value of blank row count
 							print ("Blank row detected at row (", r, ")")
+						
 						else:
+							
 							blank_row_count = 0					
-							asso.append(association)				#For each row in the BOM, we need to append the association
-							print( 	'Sample data, current row: ', clean_value(unicode(current_sheet.cell(row = r, column=QPN_col).value)),' ', 
-									clean_value(unicode(current_sheet.cell(row = r, column=DES_col).value)), ' ', 
-									clean_value(unicode(current_sheet.cell(row = r, column=MFG_col).value)), ' ', 
-									clean_value(unicode(current_sheet.cell(row = r, column=MFGPN_col).value))
+							asso.append(association)				# For each row in the BOM, we need to append the association
+							print( 	'Sample data, current row: ', 
+									clean_value(str(str(current_sheet.cell(row = r, column=QPN_col).value).encode(encoding = 'UTF-8',errors = 'strict'))),' ', 
+									clean_value(str(str(current_sheet.cell(row = r, column=DES_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
+									clean_value(str(str(current_sheet.cell(row = r, column=MFG_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
+									clean_value(str(str(current_sheet.cell(row = r, column=MFGPN_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
 								)
 							
-							current_value = clean_value(unicode(current_sheet.cell(row = r, column=QPN_col).value))
+							current_value = clean_value(str(str(current_sheet.cell(row = r, column=QPN_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
 							if current_value == "None":
 								current_value = ""
 							qpn.append(current_value)			
 							
-							current_value = clean_value(unicode(current_sheet.cell(row = r, column=DES_col).value))
+							current_value = clean_value(str(str(current_sheet.cell(row = r, column=DES_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
 							if current_value == "None":
 								current_value = ""
 							des.append(current_value)
 							
-							current_value = clean_value(unicode(current_sheet.cell(row = r, column=MFG_col).value))
+							current_value = clean_value(str(str(current_sheet.cell(row = r, column=MFG_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
 							if current_value == "None":
 								current_value = ""
 							mfg.append(current_value)
 							
-							current_value = clean_value(unicode(current_sheet.cell(row = r, column=MFGPN_col).value))
+							current_value = clean_value(str(str(current_sheet.cell(row = r, column=MFGPN_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
 							if current_value == "None":
 								current_value = ""
 							mfgpn.append(current_value)
 							
-							current_value = clean_value(unicode(current_sheet.cell(row = r, column=CR1_col).value))
+							current_value = clean_value(str(str(current_sheet.cell(row = r, column=CR1_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
 							if current_value == "None":
 								current_value = ""
 							cr1.append(current_value)
 							
-							current_value = clean_value(unicode(current_sheet.cell(row = r, column=CR1PN_col).value))
+							current_value = clean_value(str(str(current_sheet.cell(row = r, column=CR1PN_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
 							if current_value == "None":
 								current_value = ""
 							cr1pn.append(current_value)
 							
-							current_value = clean_value(unicode(current_sheet.cell(row = r, column=QTY_col).value))
+							current_value = clean_value(str(str(current_sheet.cell(row = r, column=QTY_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
 							if current_value == "None":
 								current_value = ""
 							qty.append(current_value)
 							
-							current_value = clean_value(unicode(current_sheet.cell(row = r, column=NOTE_col).value))
+							current_value = clean_value(str(str(current_sheet.cell(row = r, column=NOTE_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
 							if current_value == "None":
 								current_value = ""
 							notes.append(current_value)
