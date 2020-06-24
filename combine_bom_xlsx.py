@@ -30,12 +30,12 @@ import logging
 MFGPN_col 	= 0						# Column number containing the MFGPN
 QPN_col 	= 0						# Column number containing QPN
 MFG_col 	= 0						# Column location for manufacturer part number
-DES_col 	= 0 					# Column location for descritpion part number
+DES_col 	= 0 					# Column location for description part number
 QTY_col 	= 0 					# Column location for quantity field
 CR1_col		= 0						# Column location for supplier name
 CR1PN_col	= 0						# Column location for supplier's PN
 NOTE_col 	= 0 					# Column location for "notes" field
-BOM_HEADER 	= ["QPN","QTY","DES","MFG","MFGPN","CR1","CR1PN","NOTES"]
+BOM_HEADER 	= ["QPN","QTY","DES","REF","MFG","MFGPN","CR1","CR1PN","NOTES"]
 
 MAX_HITS = 5			#This many hits will trigger us to leave the searching loop
 data_start = 0			#This is the row where the data starts
@@ -47,6 +47,7 @@ qpn 			= []        # Pull in all QPNs into a list. This will make them easier to
 asso 			= []       	# Pull in all associations into a list. This will make them easier to work with later
 qty 			= []        # Pull in all QTYs into a list. This will make them easier to work with later
 des 			= []		# Pull in all Descriptions into a list. This will make them easier to work with later
+ref 			= []		# Pull all reference values into a list. This will make them easier to work with later
 mfg 			= []		# Pull in all Manufactures into a list. This will make them easier to work with later
 mfgpn 			= []		# Pull in all Manufacturing Part Numbers into a list. This will make them easier to work with later
 cr1 			= []		# Pull in all suppler names into a list. This will make them easier to work with later
@@ -108,12 +109,17 @@ if __name__ == '__main__':
 		files
 
 	print ("Files found in directory: ", str(len(files)))
+	print ("File names: ", files)
 
-	# Iterate through all files in directory
-	for i in range(len(files)-1):
+	# ----------------------------------------------------------------------- #
+	# Iterate through files
+	# ----------------------------------------------------------------------- #
+	for i in range(len(files)):
 		
-		# Search through and open files that are appended with *.xlsx
-		if(files[i].lower().endswith(".xlsx")):
+		# ----------------------------------------------------------------------- #
+		# Search through files and open only those having the proper extension 
+		# ----------------------------------------------------------------------- #
+		if(files[i].upper().endswith(".XLSX")):
 			
 			print ("Opening file: ", files[i])
 			wb = load_workbook(filename = files[i])     # Open the workbook that we are going to parse though 
@@ -128,7 +134,9 @@ if __name__ == '__main__':
 			print ("Worksheet names: ", ws)
 			print ("+++++++++++++++++++++++++++++++++++++++++++++++")
 			
-			# Iterate through all sheets in the opened file
+			# ----------------------------------------------------------------------- #
+			# Iterate through all sheets
+			# ----------------------------------------------------------------------- #
 			for sh in range (num_sheets):
 				sheet_valid = False
 				
@@ -140,11 +148,16 @@ if __name__ == '__main__':
 				num_rows = current_sheet.max_row     		
 				num_cols = current_sheet.max_column 		
 
-				for r in range (1,num_rows + 1):												# Find the header locations. Excel starts counting at one
-					search_header = ["QPN","QTY","DES","MFG","MFGPN","CR1","CR1PN","NOTES"]		# Load up headers we need to search for
+				# ----------------------------------------------------------------------- #
+				# Iterate through every row on current sheet
+				# ----------------------------------------------------------------------- #
+				for r in range (1,num_rows + 1):					# Find the header locations. Excel starts counting at one
+					search_header = BOM_HEADER.copy()						# Load up headers we need to search for
 					print ("Search header before starting: ", search_header)
 
-					# Iterate over columns of current row
+					# ----------------------------------------------------------------------- #
+					# Iterate over columns of selected row
+					# ----------------------------------------------------------------------- #
 					for c in range (1,num_cols + 1):				# Excel starts counting at 1
 						
 						temptext = str(str(current_sheet.cell(row = r, column=c).value).encode(encoding = 'UTF-8',errors = 'strict'))                
@@ -172,6 +185,10 @@ if __name__ == '__main__':
 							DES_col = c
 							search_header.remove("DES")
 						
+						elif((temptext.find("Reference")!=-1) or (temptext.find("REF")!=-1) or (temptext.find("Ref.Des")!=-1) or (temptext.find("Ref")!=-1)):		#Look for Description
+							REF_col = c
+							search_header.remove("REF")
+						
 						elif((temptext.find("Qty")!=-1) or (temptext.find("QTY")!=-1)):		#Look for Quantity field.  
 							QTY_col = c
 							search_header.remove("QTY")
@@ -195,6 +212,7 @@ if __name__ == '__main__':
 						
 						print( 	"Sample data in start row: ", clean_value(str(str(current_sheet.cell(row = data_start, column=QPN_col).value).encode(encoding = 'UTF-8',errors = 'strict'))),' ', 
 								clean_value(str(str(current_sheet.cell(row = data_start, column=DES_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
+								clean_value(str(str(current_sheet.cell(row = data_start, column=REF_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
 								clean_value(str(str(current_sheet.cell(row = data_start, column=MFG_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
 								clean_value(str(str(current_sheet.cell(row = data_start, column=MFGPN_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
 							)
@@ -213,14 +231,15 @@ if __name__ == '__main__':
 					print ("QPN column found to be: ", 			str(QPN_col))		
 					print ("QTY column found to be: ", 			str(QTY_col))
 					print ("Description column found to be: ", 	str(DES_col))		
+					print ("Reference column found to be: ", 	str(REF_col))		
 					print ("MFG column found to be: ", 			str(MFG_col))
 					print ("MFGPN column found to be: ", 		str(MFGPN_col))
 					print ("CR1 column found to be: ", 			str(CR1_col))
 					print ("CR1PN column found to be: ", 		str(CR1PN_col))
 					print ("NOTES column found to be: ", 		str(NOTE_col))
 					
-					header = [0,QPN_col,DES_col,MFG_col,MFGPN_col,CR1_col,CR1PN_col,QTY_col,NOTE_col]
-					header_values = ["Association","QPN","DES","MFG","MFGPN","CR1","CR1PN","QTY","NOTES"]
+					header = [0,QPN_col,DES_col,REF_col,MFG_col,MFGPN_col,CR1_col,CR1PN_col,QTY_col,NOTE_col]
+					header_values = ["Association","QPN","DES","REF","MFG","MFGPN","CR1","CR1PN","QTY","NOTES"]
 					
 					# Now iterate through all rows of the current sheet and populate the data lists
 					blank_row_count = 0		# Reset number of blank rows detected.  When three in a row are detected, break out of the loop. 
@@ -228,9 +247,9 @@ if __name__ == '__main__':
 						
 						
 						# If multiple columns are blank, break out of this loop for these are empty cells
-						if( (len(clean_value(str(str(current_sheet.cell(row = r, column=QPN_col).value).encode(encoding = 'UTF-8',errors = 'strict')))) <= 1) and
-						 	( len(clean_des(str(str(current_sheet.cell(row = r, column=DES_col).value).encode(encoding = 'UTF-8',errors = 'strict')))) <= 1) and
-							( len(clean_des(str(str(current_sheet.cell(row = r, column=MFG_col).value).encode(encoding = 'UTF-8',errors = 'strict')))) <= 1) ):
+						if( ( len(clean_des(str(str(current_sheet.cell(row = r, column=DES_col).value).encode(encoding = 'UTF-8',errors = 'strict')))) <= 1) and
+						 	( len(clean_des(str(str(current_sheet.cell(row = r, column=MFG_col).value).encode(encoding = 'UTF-8',errors = 'strict')))) <= 1) and
+							( len(clean_des(str(str(current_sheet.cell(row = r, column=MFGPN_col).value).encode(encoding = 'UTF-8',errors = 'strict')))) <= 1) ):
 							
 							blank_row_count += 1				# Increase value of blank row count
 							print ("Blank row detected at row (", r, ")")
@@ -240,7 +259,6 @@ if __name__ == '__main__':
 							blank_row_count = 0					
 							asso.append(association)				# For each row in the BOM, we need to append the association
 							print( 	'Sample data, current row: ', 
-									clean_value(str(str(current_sheet.cell(row = r, column=QPN_col).value).encode(encoding = 'UTF-8',errors = 'strict'))),' ', 
 									clean_value(str(str(current_sheet.cell(row = r, column=DES_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
 									clean_value(str(str(current_sheet.cell(row = r, column=MFG_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
 									clean_value(str(str(current_sheet.cell(row = r, column=MFGPN_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
@@ -255,6 +273,11 @@ if __name__ == '__main__':
 							if current_value == "None":
 								current_value = ""
 							des.append(current_value)
+							
+							current_value = clean_value(str(str(current_sheet.cell(row = r, column=REF_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
+							if current_value == "None":
+								current_value = ""
+							ref.append(current_value)
 							
 							current_value = clean_value(str(str(current_sheet.cell(row = r, column=MFG_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
 							if current_value == "None":
@@ -307,12 +330,13 @@ if __name__ == '__main__':
 		NewSheet.cell(row=i,column=1).value = asso[i-2]
 		NewSheet.cell(row=i,column=2).value = qpn[i-2]
 		NewSheet.cell(row=i,column=3).value = des[i-2]
-		NewSheet.cell(row=i,column=4).value = mfg[i-2]
-		NewSheet.cell(row=i,column=5).value = mfgpn[i-2]
-		NewSheet.cell(row=i,column=6).value = cr1[i-2]
-		NewSheet.cell(row=i,column=7).value = cr1pn[i-2]
-		NewSheet.cell(row=i,column=8).value = qty[i-2]
-		NewSheet.cell(row=i,column=9).value = notes[i-2]
+		NewSheet.cell(row=i,column=4).value = ref[i-2]
+		NewSheet.cell(row=i,column=5).value = mfg[i-2]
+		NewSheet.cell(row=i,column=6).value = mfgpn[i-2]
+		NewSheet.cell(row=i,column=7).value = cr1[i-2]
+		NewSheet.cell(row=i,column=8).value = cr1pn[i-2]
+		NewSheet.cell(row=i,column=9).value = qty[i-2]
+		NewSheet.cell(row=i,column=10).value = notes[i-2]
 		print (".", end = ' '),
 
 	NewBook.save(filename = "CombinedBOM.xlsx")
