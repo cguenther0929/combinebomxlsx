@@ -20,3 +20,5 @@ v2.0 -- Ported for Python 3.8+.  Renamed the file.  Tested with BOMs, and appear
 v2.1 -- leading b' text now removed from cell values thus allowing for proper BOM generation.  Additional _unicode_ errors found and corrected by way of using _encode_ method. 
 
 v2.2 -- Fixed minus-one bug in which not all files within a directory were being  were being iterated over.  A component reference field is now required in the heading.  
+
+v2.3 -- Added UOM column.  Searching for data headers is now done through regular expressions.   
