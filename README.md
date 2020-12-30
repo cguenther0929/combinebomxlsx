@@ -21,4 +21,6 @@ v2.1 -- leading b' text now removed from cell values thus allowing for proper BO
 
 v2.2 -- Fixed minus-one bug in which not all files within a directory were being  were being iterated over.  A component reference field is now required in the heading.  
 
-v2.3 -- Added UOM column.  Searching for data headers is now done through regular expressions.   
+v2.3 -- Added UOM column.  Searching for data headers is now done through regular expressions.  
+
+v2.4 -- Greatly increased logging capabilities so one can more-easily determine if a BOM file is improperly formatted.  
