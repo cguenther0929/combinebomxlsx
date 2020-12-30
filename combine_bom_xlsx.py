@@ -54,8 +54,8 @@ CR1PN_col	= 0						# Column location for supplier's PN
 NOTE_col 	= 0 					# Column location for "notes" field
 BOM_HEADER 	= ["QPN","QTY","UOM","DES","REF","MFG","MFGPN","CR1","CR1PN","NOTES"]
 
-MAX_HITS = 5			#This many hits will trigger us to leave the searching loop
-data_start = 0			#This is the row where the data starts
+data_start 				= 0			# This is the row where the data starts
+flag_header_detecetd 	= False		# Set to true as soon as we detect header data in one of the rows
 
 search_header 	= []		# Set equal to BOM_HEADER and pop elements until we find all the colums we're looking for
 sheet_valid		= False		# Flag that tells application if a sheet contains valid data or not
@@ -190,53 +190,83 @@ if __name__ == '__main__':
 
 						
 						if(re.fullmatch(qpn_re,temptext,re.IGNORECASE)):
+							flag_header_detecetd = True
 							QPN_col = c
 							search_header.remove("QPN")
+							logging.info("Found header: " + temptext)
+							logging.info("Still Looking For: " + str(search_header))
 							# print("**** DEBUG found QPN")
 						
 						elif(re.fullmatch(mfgpn_re,temptext,re.IGNORECASE)):	#Look for MFGPN header
+							flag_header_detecetd = True
 							MFGPN_col = c
 							search_header.remove("MFGPN")
+							logging.info("Found header: " + temptext)
+							logging.info("Still Looking For: " + str(search_header))
 							# print("**** DEBUG found MFGPN")
 						
 						elif(re.fullmatch(mfg_re,temptext,re.IGNORECASE)):		#Look for MFG -- make sure PN is not present
+							flag_header_detecetd = True
 							MFG_col = c
 							search_header.remove("MFG")
+							logging.info("Found header: " + temptext)
+							logging.info("Still Looking For: " + str(search_header))
 							# print("**** DEBUG found MFG")
 						
 						elif(re.fullmatch(des_re,temptext,re.IGNORECASE)):		#Look for Description
+							flag_header_detecetd = True
 							DES_col = c
 							search_header.remove("DES")
+							logging.info("Found header: " + temptext)
+							logging.info("Still Looking For: " + str(search_header))
 							# print("**** DEBUG found DES")
 						
 						elif(re.fullmatch(ref_re,temptext,re.IGNORECASE)):		#Look for Description
+							flag_header_detecetd = True
 							REF_col = c
 							search_header.remove("REF")
+							logging.info("Found header: " + temptext)
+							logging.info("Still Looking For: " + str(search_header))
 							# print("**** DEBUG found REF")
 						
 						elif(re.fullmatch(qty_re,temptext,re.IGNORECASE)):		#Look for Quantity field.  
+							flag_header_detecetd = True
 							QTY_col = c
 							search_header.remove("QTY")
+							logging.info("Found header: " + temptext)
+							logging.info("Still Looking For: " + str(search_header))
 							# print("**** DEBUG found QTY")
 
 						elif(re.fullmatch(uom_re,temptext,re.IGNORECASE)):		#Look for Quantity field.  
+							flag_header_detecetd = True
 							UOM_col = c
 							search_header.remove("UOM")
+							logging.info("Found header: " + temptext)
+							logging.info("Still Looking For: " + str(search_header))
 							# print("**** DEBUG found UOM")
 						
 						elif(re.fullmatch(cr1_re,temptext,re.IGNORECASE)):		#Look for CR1, and cannot have PN as in CR1PN
+							flag_header_detecetd = True
 							CR1_col = c
 							search_header.remove("CR1")
+							logging.info("Found header: " + temptext)
+							logging.info("Still Looking For: " + str(search_header))
 							# print("**** DEBUG found CR1")
 						
 						elif(re.fullmatch(cr1pn_re,temptext,re.IGNORECASE)):		#Look for CR1PN
+							flag_header_detecetd = True
 							CR1PN_col = c
 							search_header.remove("CR1PN")
+							logging.info("Found header: " + temptext)
+							logging.info("Still Looking For: " + str(search_header))
 							# print("**** DEBUG found CR1PN")
 						
 						elif(re.fullmatch(notes_re,temptext,re.IGNORECASE)):		#Look for Notes 
+							flag_header_detecetd = True
 							NOTE_col = c
 							search_header.remove("NOTES")
+							logging.info("Found header: " + temptext)
+							logging.info("Still Looking For: " + str(search_header))
 							# print("**** DEBUG found NOTES")
 					
 					if( (len(search_header) == 0) ):		# Found all header fields
@@ -251,6 +281,12 @@ if __name__ == '__main__':
 								clean_value(str(str(current_sheet.cell(row = data_start, column=MFGPN_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
 							)
 						break
+
+					elif(flag_header_detecetd == True):
+						sheet_valid = False
+						print ("Found valid header data, but missing: ", search_header)
+						logging.info("Found valid header data, but missing: " + str(search_header))
+						break 
 
 					elif((c >= 9) and (len(search_header) == 1) and (search_header.index("REF")!=ValueError)):		# This BOM does not contain the reference field
 						REF_col = 1
@@ -268,6 +304,7 @@ if __name__ == '__main__':
 						break
 					
 					elif( (r == 10) and (len(search_header) > 0) and sh >= num_sheets ):		# Some header fields are missing, so shutdown
+						sheet_valid = False
 						print ("On sheet: ", str(current_sheet), " -- did not find headers: ", search_header)
 						sys.exit(0)
 
