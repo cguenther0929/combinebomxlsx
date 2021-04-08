@@ -24,3 +24,5 @@ v2.2 -- Fixed minus-one bug in which not all files within a directory were being
 v2.3 -- Added UOM column.  Searching for data headers is now done through regular expressions.  
 
 v2.4 -- Greatly increased logging capabilities so one can more-easily determine if a BOM file is improperly formatted.  
+
+v2.5 -- Fixed issue in which the header was being prematurely detected due to text containing keywords before the actual header was processed.  
