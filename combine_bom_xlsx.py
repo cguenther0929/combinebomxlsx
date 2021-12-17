@@ -55,7 +55,7 @@ NOTE_col 	= 0 					# Column location for "notes" field
 BOM_HEADER 	= ["QPN","QTY","UOM","DES","REF","MFG","MFGPN","CR1","CR1PN","NOTES"]
 
 data_start 				= 0			# This is the row where the data starts
-flag_header_detecetd 	= False		# Set to true as soon as we detect header data in one of the rows
+flag_header_detected 	= False		# Set to true as soon as we detect header data in one of the rows
 
 search_header 	= []		# Set equal to BOM_HEADER and pop elements until we find all the colums we're looking for
 sheet_valid		= False		# Flag that tells application if a sheet contains valid data or not
@@ -82,7 +82,7 @@ def debugbreak():
 		
 def clean_value(textin):
 	temptext = textin
-	logging.info("Text entered into method clean value: " + str(temptext))
+	# logging.info("Text entered into method clean value: " + str(temptext))
 	temptext = temptext.lstrip('text:u\'')     	# Remove the initial part of the string that we don't need 'text:u'   
 	temptext = temptext.lstrip("b\'")     	# Remove the initial part of the string that we don't need 'text:u'   
 	temptext = temptext.replace("'","")			# Remove single quote marks from value
@@ -152,6 +152,13 @@ if __name__ == '__main__':
 			print ("Worksheet names: ", ws)
 			print ("+++++++++++++++++++++++++++++++++++++++++++++++")
 			
+			logging.info ("===============================================")
+			logging.info ("===============================================")
+			logging.info ("File opened: " + str(files[i]))
+			logging.info ("The number of worksheets is: " + str(num_sheets))
+			logging.info ("Worksheet names: " + str(ws))
+			logging.info ("+++++++++++++++++++++++++++++++++++++++++++++++")
+			
 			# ----------------------------------------------------------------------- #
 			# Iterate through all sheets
 			# ----------------------------------------------------------------------- #
@@ -173,7 +180,7 @@ if __name__ == '__main__':
 					search_header = BOM_HEADER.copy()						# Load up headers we need to search for
 					print ("Search header before starting: ", search_header)
 					
-					flag_header_detecetd = False
+					flag_header_detected = False
 					# ----------------------------------------------------------------------- #
 					# Iterate over columns of selected row
 					# ----------------------------------------------------------------------- #
@@ -184,7 +191,7 @@ if __name__ == '__main__':
 						temptext = temptext.lstrip("b\'")     		
 						temptext = temptext.rstrip("\'")     		
 						temptext = temptext.replace(" ","")			# Remove any and all white spaces 
-						logging.info("Text extracted from cell: " + temptext)
+						# logging.info("Text extracted from cell: " + temptext)
 						# print ("****DEBUG Text Extracted: ", temptext)
 						# print ("****DEBUG Current column number: ", str(c))
 
@@ -262,11 +269,11 @@ if __name__ == '__main__':
 
 						# High confidence that we've found the header
 						if(len(search_header) <= 2):
-							flag_header_detecetd = True
+							flag_header_detected = True
+							data_start = r + 1			# data should start on following row
 					
 					if( (len(search_header) == 0) ):		# Found all header fields
 						sheet_valid = True
-						data_start = r + 1			# Plenty of confidence at this point that we've found data start
 						print ("Data appears to start on row: ", data_start)
 						
 						print( 	"Sample data in start row: ", clean_value(str(str(current_sheet.cell(row = data_start, column=QPN_col).value).encode(encoding = 'UTF-8',errors = 'strict'))),' ', 
@@ -281,8 +288,10 @@ if __name__ == '__main__':
 						REF_col = 1
 						search_header.remove("REF")
 						sheet_valid = True
-						data_start = r + 1			# Plenty of confidence at this point that we've found data start
+						print ("This BOM does not appear to contain a reference column.")
+						logging.info ("This BOM does not appear to contain a reference column.")
 						print ("Data appears to start on row: ", data_start)
+						logging.info("Data appears to start on row: " + str(data_start))
 						
 						print( 	"Sample data in start row: ", clean_value(str(str(current_sheet.cell(row = data_start, column=QPN_col).value).encode(encoding = 'UTF-8',errors = 'strict'))),' ', 
 								clean_value(str(str(current_sheet.cell(row = data_start, column=DES_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
@@ -292,21 +301,16 @@ if __name__ == '__main__':
 							)
 						break
 					
-					elif(flag_header_detecetd == True):
+					elif(flag_header_detected == True):
 						sheet_valid = False
 						print ("Found valid header data, but missing: ", search_header)
 						logging.info("Found valid header data, but missing: " + str(search_header))
-						break 
-					
-					elif( (r == 10) and (len(search_header) > 0) and sh >= num_sheets ):		# Some header fields are missing, so shutdown
-						sheet_valid = False
-						print ("On sheet: ", str(current_sheet), " -- did not find headers: ", search_header)
+						logging.info("System existing due to an invalid BOM format.")
+						
+						print("\n\n====================================")
+						print("Exiting due to invalid BOM format.")
+						userinput = input("Press any key to exit...")
 						sys.exit(0)
-
-					elif((r == 10) and (len(search_header) > 0) and sh < num_sheets):
-						sheet_valid = False
-						print ("* File: ", str(files[i]), "Invalid Sheet: ", str(ws[sh]), " -- did not find headers: ", search_header)
-						break
 
 				if(sheet_valid):
 					print ("QPN column found to be: ", 			str(QPN_col))		
@@ -422,8 +426,12 @@ if __name__ == '__main__':
 		NewSheet.cell(row=i,column=6).value = mfgpn[i-2]
 		NewSheet.cell(row=i,column=7).value = cr1[i-2]
 		NewSheet.cell(row=i,column=8).value = cr1pn[i-2]
+
+		NewSheet.cell(row=i,column=9).number_format = '0.00'
 		NewSheet.cell(row=i,column=9).value = qty[i-2]
+
 		NewSheet.cell(row=i,column=10).value = uom[i-2]
+
 		NewSheet.cell(row=i,column=11).value = notes[i-2]
 		print (".", end = ' '),
 
