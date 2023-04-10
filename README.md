@@ -28,3 +28,5 @@ v2.4 -- Greatly increased logging capabilities so one can more-easily determine 
 v2.5 -- Fixed issue in which the header was being prematurely detected due to text containing keywords before the actual header was processed.  
 
 v2.6 -- Increased logging capability so it is easier to identify BOM formatting issues.  System will now exit upon detecting a BOM format issue, but will first alert user of problem.  Said format issue is also logged via logging.log.  
+
+v2.7 -- Modified mechanism that determines if REF column is in the BOM.  The NOTES RE was expanded to include both NOTES and NOTE.

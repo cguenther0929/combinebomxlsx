@@ -37,7 +37,7 @@ qty_re		= "(QTY)|(QUANTITY)"
 uom_re		= "(UOM)|(UNIT OF MEASURE)"
 cr1_re		= "(CR1)"
 cr1pn_re	= "(CR1PN)"
-notes_re	= "(NOTES)"
+notes_re	= "(NOTES)|(NOTE)"
 
 
 
@@ -284,22 +284,30 @@ if __name__ == '__main__':
 							)
 						break
 
-					elif((len(search_header) == 1) and (search_header.index("REF")!=ValueError)):		# This BOM does not contain the reference field
-						REF_col = 1
-						search_header.remove("REF")
-						sheet_valid = True
-						print ("This BOM does not appear to contain a reference column.")
-						logging.info ("This BOM does not appear to contain a reference column.")
-						print ("Data appears to start on row: ", data_start)
-						logging.info("Data appears to start on row: " + str(data_start))
+					elif((len(search_header) == 1)):		# This BOM does not contain the reference field
 						
-						print( 	"Sample data in start row: ", clean_value(str(str(current_sheet.cell(row = data_start, column=QPN_col).value).encode(encoding = 'UTF-8',errors = 'strict'))),' ', 
-								clean_value(str(str(current_sheet.cell(row = data_start, column=DES_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
-								clean_value(str(str(current_sheet.cell(row = data_start, column=REF_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
-								clean_value(str(str(current_sheet.cell(row = data_start, column=MFG_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
-								clean_value(str(str(current_sheet.cell(row = data_start, column=MFGPN_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
-							)
-						break
+						reference_index = 0
+						try:
+							reference_index = search_header.index("REF")
+						except:
+							pass
+					
+						if(reference_index > 0):
+							REF_col = 1
+							# search_header.remove("REF")
+							sheet_valid = True
+							print ("This BOM does not appear to contain a reference column.")
+							logging.info ("This BOM does not appear to contain a reference column.")
+							print ("Data appears to start on row: ", data_start)
+							logging.info("Data appears to start on row: " + str(data_start))
+							
+							print( 	"Sample data in start row: ", clean_value(str(str(current_sheet.cell(row = data_start, column=QPN_col).value).encode(encoding = 'UTF-8',errors = 'strict'))),' ', 
+									clean_value(str(str(current_sheet.cell(row = data_start, column=DES_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
+									clean_value(str(str(current_sheet.cell(row = data_start, column=REF_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
+									clean_value(str(str(current_sheet.cell(row = data_start, column=MFG_col).value).encode(encoding = 'UTF-8',errors = 'strict'))), ' ', 
+									clean_value(str(str(current_sheet.cell(row = data_start, column=MFGPN_col).value).encode(encoding = 'UTF-8',errors = 'strict')))
+								)
+							break
 					
 					elif(flag_header_detected == True):
 						sheet_valid = False
