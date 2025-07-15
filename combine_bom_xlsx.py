@@ -22,8 +22,6 @@ import os
 from openpyxl import Workbook
 from openpyxl import load_workbook
 import logging
-# import xlrd		
-# import xlwt
 
 # ----------------------------------------------------------------------- #
 # Regular Expression Strings
@@ -119,8 +117,29 @@ logging.basicConfig(
 #******************************************************************************   
 if __name__ == '__main__':
 
+	
+	# ----------------------------------------------------------------------- #
+	# Build the directory tree
+	# ----------------------------------------------------------------------- #
 	path = os.getcwd()
-	# Find path/dirs/files
+	for (path, dirs, files) in os.walk(path):
+		path
+		dirs
+		files
+	
+	# ----------------------------------------------------------------------- #
+	# If a consolidated BOM already exists, then remove it
+	# ----------------------------------------------------------------------- #
+	for i in range(len(files)):
+		if(files[i].find("Combined") != -1):
+			logging.info("Deleting existing consolidated BOM.")
+			os.remove(files[i])
+	
+	# ----------------------------------------------------------------------- #
+	# Some file may have been removed, so refresh 
+	# directory information.  
+	# ----------------------------------------------------------------------- #
+	path = os.getcwd()
 	for (path, dirs, files) in os.walk(path):
 		path
 		dirs
@@ -133,7 +152,6 @@ if __name__ == '__main__':
 	# Iterate through files
 	# ----------------------------------------------------------------------- #
 	for i in range(len(files)):
-		
 		# ----------------------------------------------------------------------- #
 		# Search through files and open only those having the proper extension 
 		# ----------------------------------------------------------------------- #
